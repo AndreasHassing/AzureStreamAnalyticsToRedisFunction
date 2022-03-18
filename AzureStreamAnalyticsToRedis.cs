@@ -49,15 +49,12 @@ namespace AzureStreamAnalyticsToRedisFunction
 
             IDatabase db = redis.GetDatabase();
 
-            List<string> errors = new();
             foreach (JObject metricPoint in metricPoints)
             {
                 if (!(metricPoint.TryGetValue("MetricKey", StringComparison.OrdinalIgnoreCase, out JToken metricKey) && metricKey.Type == JTokenType.String))
                 {
-                    string error = $"Missing string MetricKey property for {metricPoint}";
-
-                    log.LogError(error);
-                    errors.Add(error);
+                    log.LogError($"Missing string MetricKey property for {metricPoint}");
+                    continue;
                 }
 
                 string redisKey = metricKey.Value<string>();
@@ -66,9 +63,7 @@ namespace AzureStreamAnalyticsToRedisFunction
                 await db.SortedSetAddAsync(redisKey, redisValue, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
             }
 
-            return errors.Count == 0
-                ? new OkResult()
-                : new BadRequestObjectResult(new { errors });
+            return new OkResult();
         }
     }
 }
