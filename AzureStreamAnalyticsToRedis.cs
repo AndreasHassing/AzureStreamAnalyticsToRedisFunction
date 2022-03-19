@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -28,7 +27,7 @@ namespace AzureStreamAnalyticsToRedisFunction
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            string requestBody = await req.ReadRequestBodyAsStringAsync();
+            string requestBody = (await req.ReadRequestBodyAsStringAsync())?.Trim();
 
             if (string.IsNullOrEmpty(requestBody))
             {
@@ -36,7 +35,7 @@ namespace AzureStreamAnalyticsToRedisFunction
                 return new NoContentResult();
             }
 
-            if (!(requestBody.TrimStart().StartsWith("[") && requestBody.TrimEnd().EndsWith("]")))
+            if (!requestBody.StartsWith("[") || !requestBody.EndsWith("]"))
             {
                 string error = "Received metrics are not a JSON-array";
 
